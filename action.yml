@@ -1,4 +1,4 @@
-name: "Generate SBOM"
+name: "Generate SBOM and upload to sbom.com.tr"
 description: "sbom.com.tr sbom"
 inputs:
   scanner_name:
