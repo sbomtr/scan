@@ -1,0 +1,77 @@
+name: "Generate SBOM"
+description: "sbom.com.tr sbom"
+inputs:
+  scanner_name:
+    description: 'Scanner Name'
+    required: true
+    default: 'trivyfs'
+  target:
+    description: 'Scan target (applicable for image scans)'
+    required: false
+    default: ''
+outputs:
+  sbom_url:
+    description: "The URL of the generated SBOM"
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Dependencies
+      run: |
+        if [ "${{ inputs.scanner_name }}" = "trivyfs" ] || [ "${{ inputs.scanner_name }}" = "trivyimage" ]; then
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+        fi
+        if [ "${{ inputs.scanner_name }}" = "grypefs" ] || [ "${{ inputs.scanner_name }}" = "grypeimage" ]; then
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+        fi
+        if [ "${{ inputs.scanner_name }}" = "syftfs" ] || [ "${{ inputs.scanner_name }}" = "syftimage" ]; then
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+        fi
+      shell: bash
+
+    - name: Generate SBOM and return unique https://sbom.com.tr URL
+      run: |
+        GIT_COMMIT=$(git rev-parse HEAD)
+        REPO_SLUG=$(basename $(git rev-parse --show-toplevel))
+        case "${{ inputs.scanner_name }}" in
+          trivyfs)
+            scan_cmd="trivy fs ${{ inputs.target }} -f cyclonedx --scanners vuln -q"
+            ;;
+          trivyimage)
+            scan_cmd="trivy image ${{ inputs.target }} -f cyclonedx --scanners vuln -q"
+            ;;
+          grypefs)
+            scan_cmd="grype ${{ inputs.target }} -o cyclonedx-json -q"
+            ;;
+          grypeimage)
+            scan_cmd="grype registry:${{ inputs.target }} -o cyclonedx-json -q"
+            ;;
+          syftfs)
+            scan_cmd="syft ${{ inputs.target }} -o cyclonedx-json -q"
+            ;;
+          syftimage)
+            scan_cmd="syft registry:${{ inputs.target }} -o cyclonedx-json -q"
+            ;;
+        esac
+        if [[ "${{ inputs.scanner_name }}" == "trivyfs" || "${{ inputs.scanner_name }}" == "grypefs" || "${{ inputs.scanner_name }}" == "syftfs" ]]; then
+          SCAN_OUTPUT=$(eval "$scan_cmd")
+          MODIFIED_OUTPUT=$(echo "$SCAN_OUTPUT" | jq --arg git_commit "$GIT_COMMIT" --arg repo_slug "$REPO_SLUG" '
+            .metadata.component."bom-ref" = $git_commit |
+            .metadata.component.name = $repo_slug
+          ')
+          RESPONSE=$(echo "$MODIFIED_OUTPUT" | curl -sd @- "$SBOM_SH_SERVER" -H "Content-Type: application/json")
+        else
+          RESPONSE=$(eval "$scan_cmd" | curl -sd @- "$SBOM_SH_SERVER" -H "Content-Type: application/json")
+        fi
+
+          SBOM_SHARE_URL=$(echo "$RESPONSE" | jq -r '.ShareUrl')
+          echo "SBOM_SHARE_URL=$SBOM_SHARE_URL" >> $GITHUB_ENV
+      shell: bash
+      env:
+        SBOM_SH_SERVER: 'https://sbom.com.tr'
+        scanner_name: ${{ inputs.scanner_name }}
+        TARGET: ${{ inputs.target }}
+        GITHUB_WORKSPACE: ${{ github.workspace }}
+
+    - name: Output SBOM URL
+      run: echo "The SBOM can be found at $SBOM_SHARE_URL"
+      shell: bash
