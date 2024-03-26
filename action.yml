@@ -1,5 +1,8 @@
-name: "Generate SBOM and upload to sbom.com.tr"
-description: "sbom.com.tr sbom"
+name: "Share Your SBOM"
+branding:
+  icon: 'package'
+  color: 'navy'
+description: "Seamlessly integrate into your CI/CD workflows, generating and sharing Software Bills of Materials (SBOMs) effortlessly"
 inputs:
   scanner_name:
     description: 'Scanner Name'
