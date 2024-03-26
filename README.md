@@ -1,1 +1,3 @@
-# scan
+![workflow](https://raw.githubusercontent.com/sbomtr/scan/main/images/workflow.png)
+
+an open-source tool designed to seamlessly integrate into your CI/CD workflows, generating and sharing Software Bills of Materials (SBOMs) effortlessly. With the push towards more transparent, secure software development, our tool stands as a cornerstone for developers and companies alike, offering an easy-to-use platform for generating comprehensive SBOMs. By providing a shareable URL for each SBOM, we ensure that your software transparency and security compliance efforts are as streamlined as possible. Embrace the future of software development with our tool, where generating SBOMs is not just a task, but a seamless part of your development process.
