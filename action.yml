@@ -1,7 +1,7 @@
 name: "Share Your SBOM"
 branding:
   icon: 'package'
-  color: 'navy'
+  color: 'blue'
 description: "Seamlessly integrate into your CI/CD workflows, generating and sharing Software Bills of Materials (SBOMs) effortlessly"
 inputs:
   scanner_name:
