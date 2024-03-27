@@ -74,11 +74,6 @@ runs:
         scanner_name: ${{ inputs.scanner_name }}
         TARGET: ${{ inputs.target }}
         GITHUB_WORKSPACE: ${{ github.workspace }}
-    - name: Fetch data
-        uses: githubocto/flat@v3
-        with:
-          http_url: https://sbom.com.tr/data_66040a661c1ab.json
-          downloaded_filename: sbom.json
     - name: Output SBOM URL
       run: echo "The SBOM can be found at $SBOM_SHARE_URL"
       shell: bash
